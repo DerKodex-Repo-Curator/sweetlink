@@ -1,34 +1,38 @@
-# Release Checklist (npm)
+# Releasing sweetlink
 
-> Use the helper script for phased runs: `./scripts/release.sh <phase>` (gates | artifacts | publish | smoke | tag | all). It stops at the first failure so you can fix and resume.
+The release authority is `.github/workflows/release.yml`, calling the shared
+`openclaw/release-workflows` npm archetype at `@v1`. It publishes the verified
+npm tarball through GitHub OIDC and attaches that tarball, changelog notes,
+asset inventory, and `SHA256SUMS` to the GitHub Release. There is no npm token.
 
-1. **Version & metadata**
-   - [ ] Update `package.json` version (e.g., `0.2.1`).
-   - [ ] Confirm package metadata (`name`, `description`, `repository`, `keywords`, `license`, `files`) and `bin.sweetlink` -> `dist/src/index.js`.
-   - [ ] If dependencies changed, rerun `pnpm install` to refresh `pnpm-lock.yaml`.
+Prepare the version in `package.json`, keep the lockfile synchronized, and add
+exactly one dated `CHANGELOG.md` section for that version. Merge to protected
+`main` and wait for push CI on the exact commit to pass. Then push an annotated
+SSH-signed `vX.Y.Z` tag using a key in `.github/release-allowed-signers`.
+Lightweight, unsigned, moved tags and conflicting published bytes are rejected.
 
-2. **Artifacts**
-   - [ ] `pnpm run build` (ensure `dist/` is fresh).
-   - [ ] `npm pack --pack-destination /tmp`.
-   - [ ] Move `/tmp/sweetlink-<version>.tgz` to the repo root; generate `*.sha1` and `*.sha256` (do not commit these files).
+For a no-publish rehearsal, dispatch Release on current `main` with `version`
+matching the manifest and a dated changelog section, and leave `dry_run=true`
+(the default). The existing released version can be used: rehearsal freezes
+current protected main and ignores the historical tag. Validation, build,
+packing, clean x64/arm64 installation and CLI smoke run without creating tags
+or publishing. A live dispatch requires an existing signed version tag; the
+workflow does not generate a signing key or an unsigned substitute.
 
-3. **Changelog & docs**
-   - [ ] Add release notes to the top of `CHANGELOG.md` (descending versions, one heading per version).
-   - [ ] Update `README.md` or docs for any CLI flag or workflow changes.
+Registry administrators configure the existing package's trusted publisher
+against `steipete/sweetlink` and **`release.yml`**, the caller filename. The
+publisher verifies registry integrity, signatures, and provenance against the
+frozen commit. Existing versions are never republished; only byte-identical
+publication can be resumed.
 
-4. **Validation**
-   - [ ] `pnpm run lint`
-   - [ ] `pnpm run typecheck`
-   - [ ] `pnpm test`
-   - [ ] `pnpm run build`
+Local read-only verification remains available:
 
-5. **Publish**
-   - [ ] Ensure git is clean and you are logged into npm.
-   - [ ] `pnpm publish --tag latest --access public`
-   - [ ] `npm view sweetlink version` (and optionally `npm view sweetlink time`) to confirm registry state.
+```sh
+pnpm install --frozen-lockfile
+pnpm lint && pnpm typecheck && pnpm test
+pnpm build
+npm pack --dry-run
+```
 
-6. **Post-publish**
-   - [ ] Tag and push: `git tag v<version> && git push origin v<version>`.
-   - [ ] Create a GitHub release for `v<version>` titled `SweetLink <version>`; body = changelog bullets (no heading); attach the tarball + checksums.
-   - [ ] Smoke-test from a clean directory: `npx -y sweetlink@<version> --version`.
-   - [ ] Promote or adjust dist-tags if needed (`npm dist-tag add sweetlink@<version> latest`).
+Do not publish locally or create releases by hand. After publication, verify
+the npm version and GitHub assets, then open the next Unreleased section.
