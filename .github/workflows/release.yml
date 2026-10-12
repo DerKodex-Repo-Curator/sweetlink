@@ -40,4 +40,4 @@ jobs:
       package-manager-version: '11.28.2'
       test-command: pnpm lint && pnpm typecheck && pnpm test
       build-command: pnpm build
-      smoke-command: sweetlink --version && sweetlink --help && sweetlinkd --help
+      smoke-command: ./node_modules/.bin/sweetlink --version && ./node_modules/.bin/sweetlink --help && ./node_modules/.bin/sweetlinkd --help
