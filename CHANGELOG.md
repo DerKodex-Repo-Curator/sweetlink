@@ -1,5 +1,7 @@
 # Changelog
 
+## 0.2.6 — Unreleased
+
 ## 0.2.5 — 2026-10-16
 
 **Highlights:** Fix malicious source-map denial of service and remove a vulnerable unused dependency, alongside routine dependency updates.
