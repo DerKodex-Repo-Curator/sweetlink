@@ -2,6 +2,8 @@
 
 ## 0.2.5 — Unreleased
 
+- Update source-map-js to 1.2.2 to fix malicious source-map denial of service, and refresh browser automation, HTTP, validation, and development dependencies within their current release lines. Remove unused Ultracite tooling to eliminate its vulnerable braces dependency. Thanks @dependabot[bot] for #23.
+
 ## 0.2.4 — 2026-10-01
 
 **Highlights:** Updated browser and HTTP dependencies, including undici security fixes, plus reliable workspace builds.
